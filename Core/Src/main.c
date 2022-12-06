@@ -40,8 +40,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
-I2C_HandleTypeDef hi2c3;
 
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -54,7 +54,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_I2C3_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -118,7 +118,7 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_USART2_UART_Init();
-  MX_I2C3_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   //uint16_t DEF_SLAVE_ADDR = 0X51<<1;
 
@@ -152,11 +152,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  //can we access the acknowledge bit?
-  //in one write, we send 3 bytes
-  //first byte is the address of the memory we want to read/write to -> command?. the following 2 bytes is the data into or out of the mem
 
-  /*Enables Module A1 with 5.85V, reads it, sends V back to python file*/
 
 //  ok_1 = HAL_I2C_Mem_Write(&hi2c3, DEF_SLAVE_ADDR, PAGE_ADDR, I2C_MEMADD_SIZE_8BIT, &PAGE_1, 1, 100);
 //  ok_2 = HAL_I2C_Mem_Write(&hi2c3, DEF_SLAVE_ADDR, VOUT_ADDR, I2C_MEMADD_SIZE_8BIT, &VOUT_6_2, 1, 100);
@@ -164,11 +160,11 @@ int main(void)
   //read_ok = HAL_I2C_Mem_Read(&hi2c3, DEF_SLAVE_ADDR, READ_VOUT_ADDR, I2C_MEMADD_SIZE_8BIT, &reply, 2, 15);
   //send_uart_ok = HAL_UART_Transmit_IT(&huart2, &reply, 2);
 
-
+  //uart_command_ok  = HAL_UART_Receive_IT(&huart2, command, 6);
   while (1)
   {
     /* USER CODE END WHILE */
-	  uart_command_ok  = HAL_UART_Receive_IT(&huart2, command, 6);
+	  uart_command_ok  = HAL_UART_Receive_IT(&huart1, command, 6);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -255,36 +251,35 @@ static void MX_I2C1_Init(void)
 }
 
 /**
-  * @brief I2C3 Initialization Function
+  * @brief USART1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_I2C3_Init(void)
+static void MX_USART1_UART_Init(void)
 {
 
-  /* USER CODE BEGIN I2C3_Init 0 */
+  /* USER CODE BEGIN USART1_Init 0 */
 
-  /* USER CODE END I2C3_Init 0 */
+  /* USER CODE END USART1_Init 0 */
 
-  /* USER CODE BEGIN I2C3_Init 1 */
+  /* USER CODE BEGIN USART1_Init 1 */
 
-  /* USER CODE END I2C3_Init 1 */
-  hi2c3.Instance = I2C3;
-  hi2c3.Init.ClockSpeed = 100000;
-  hi2c3.Init.DutyCycle = I2C_DUTYCYCLE_2;
-  hi2c3.Init.OwnAddress1 = 0;
-  hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c3.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c3.Init.OwnAddress2 = 0;
-  hi2c3.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c3.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c3) != HAL_OK)
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 2400;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN I2C3_Init 2 */
+  /* USER CODE BEGIN USART1_Init 2 */
 
-  /* USER CODE END I2C3_Init 2 */
+  /* USER CODE END USART1_Init 2 */
 
 }
 
@@ -303,18 +298,18 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 1 */
 
   /* USER CODE END USART2_Init 1 */
-	 huart2.Instance = USART2;
-	  huart2.Init.BaudRate = 2400;
-	  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-	  huart2.Init.StopBits = UART_STOPBITS_1;
-	  huart2.Init.Parity = UART_PARITY_NONE;
-	  huart2.Init.Mode = UART_MODE_TX_RX;
-	  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-	  if (HAL_UART_Init(&huart2) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 2400;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
@@ -370,6 +365,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PB4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF9_I2C3;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
 }
 
 /* USER CODE BEGIN 4 */
@@ -379,22 +382,21 @@ static void MX_GPIO_Init(void)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	HAL_GPIO_TogglePin(LD2_GPIO_Port,LD2_Pin);
-	if(huart -> Instance == USART2){
-		DEF_SLAVE_ADDR = command[0]<<1;
-		if(command[1] == 0){ //write
-			command_arg[0] = command[4];
-			command_arg[1] = command[5];
-			command_addr = command[3];
-			length = command[2];
-			i2c_command_ok = HAL_I2C_Mem_Write(&hi2c1, DEF_SLAVE_ADDR, command_addr , I2C_MEMADD_SIZE_8BIT, command_arg, length, 10);
-
-			//i2c_command_ok = HAL_I2C_Mem_Write(&hi2c3, DEF_SLAVE_ADDR, command[2] , I2C_MEMADD_SIZE_8BIT, command[3], command[1], 10);
-		}
-		else{ // command[1] == 1 read
-			read_ok = HAL_I2C_Mem_Read(&hi2c1, DEF_SLAVE_ADDR, command[3] , I2C_MEMADD_SIZE_8BIT, &reply, command[2], 10);
-			send_uart_ok = HAL_UART_Transmit(&huart2, &reply, command[2], 10);
-		}
+	//HAL_GPIO_TogglePin(LD2_GPIO_Port,LD2_Pin);
+	if(huart -> Instance == USART1){
+		HAL_GPIO_TogglePin(LD2_GPIO_Port,LD2_Pin);
+	}
+	DEF_SLAVE_ADDR = command[0]<<1;
+	if(command[1] == 0){ //write
+		command_arg[0] = command[4];
+		command_arg[1] = command[5];
+		command_addr = command[3];
+		length = command[2];
+		i2c_command_ok = HAL_I2C_Mem_Write(&hi2c1, DEF_SLAVE_ADDR, command_addr , I2C_MEMADD_SIZE_8BIT, command_arg, length, 10);
+	}
+	else{ // command[1] == 1 read
+		read_ok = HAL_I2C_Mem_Read(&hi2c1, DEF_SLAVE_ADDR, command[3] , I2C_MEMADD_SIZE_8BIT, &reply, command[2], 10);
+		send_uart_ok = HAL_UART_Transmit(&huart1, &reply, command[2], 10);
 	}
 }
 
@@ -452,7 +454,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     		//HAL_UART_Transmit(&huart2, "Error: OTP", sizeof(reply), 200); // Toggle The Output (LED) Pin
         }
     HAL_GPIO_TogglePin(LD2_GPIO_Port,LD2_Pin);
-    HAL_UART_Transmit(&huart2, error, sizeof(error), 200);
+    HAL_UART_Transmit(&huart1, error, sizeof(error), 200);
 }
 
 /* USER CODE END 4 */
