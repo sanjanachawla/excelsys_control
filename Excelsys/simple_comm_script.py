@@ -27,8 +27,8 @@ global vout_mode
 import serial
 
 try:
-    s = serial.Serial('COM9', 2400, parity=serial.PARITY_NONE, timeout = 10)
-    print("connected to COM9 STM")
+    s = serial.Serial('COM12', 2400, parity=serial.PARITY_NONE, timeout = 10)
+    print("connected to COM12 STM")
 except:
     print("failed to connect to STM")
 
@@ -43,12 +43,13 @@ VOUT =   [SLV_ADDR, 0x00, 0x02, 0x21, 0x33, 0x06]# [slv_adr, read/write, length,
                                      # 1= read, 0 = write
 READ_V = [SLV_ADDR, 0x01, 0x02, 0x8B, 0x0, 0x0]
 READ_EN =[SLV_ADDR, 0x01, 0x01, 0x01, 0x00, 0x00]
+TEST = [0x08, 0x07, 0x06]
 
 
 #cannot read the control commands. have to see what is enabled a diff way.
 
 num_bytes = 2;
-command_data = EN_ON
+command_data = VOUT
 for j in range (0, 1): 
     send_command = ""
     for i in command_data:
@@ -56,34 +57,36 @@ for j in range (0, 1):
     hex = "".join("{:02X}".format(ord(c)) for c in send_command) # print hex representation
     print("send comm= ", send_command)
 
-    
-    try:
-        s.write(send_command)
-        print("command written")
-    except:
-        print("not able to send")
-    reply = s.read(2)
-    print("reply = ", reply)
-    if reply:
-        hex = "".join("{:02X}".format(ord(c)) for c in reply) # print hex representation of string
-        if(num_bytes ==2):
-            #byte come in reversed order
-            print(hex)
-            hex_swap = []
-            hex = list(hex)
-            hex_swap[0:1] = hex[2:4]
-            hex_swap[2:3] = hex[0:2]
-            hex_str = "".join(hex_swap)
-            #print(hex_str)
+    while(1):
+        try:
+            print("send comm= ", send_command)
+            s.write(send_command)
+            print("command written")
+        except:
+            print("not able to send")
+        time.sleep(1)
+        reply = s.read(2)
+        print("reply = ", reply)
+        if reply:
+            hex = "".join("{:02X}".format(ord(c)) for c in reply) # print hex representation of string
+            if(num_bytes ==2):
+                #byte come in reversed order
+                print(hex)
+                hex_swap = []
+                hex = list(hex)
+                hex_swap[0:1] = hex[2:4]
+                hex_swap[2:3] = hex[0:2]
+                hex_str = "".join(hex_swap)
+                #print(hex_str)
 
-            reply_data = int(hex_str, 16)
-            val = Decimal(reply_data)/Decimal(pow(2, 8))
-            print(" reply val = ", val)
-        else:
-            print("reply = ", reply)
-            reply_data = int(hex, 16)
-            val = Decimal(reply_data)/Decimal(pow(2, 8))
-            print(" reply val = ", val)
+                reply_data = int(hex_str, 16)
+                val = Decimal(reply_data)/Decimal(pow(2, 8))
+                print(" reply val = ", val)
+            else:
+                print("reply = ", reply)
+                reply_data = int(hex, 16)
+                val = Decimal(reply_data)/Decimal(pow(2, 8))
+                print(" reply val = ", val)
 
 
  

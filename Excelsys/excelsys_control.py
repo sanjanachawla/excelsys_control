@@ -15,12 +15,12 @@ from decimal import *
 #for testing and understanding, lets print out what we are sending 
 #try:
 #     # Sending over usb
-s = serial.Serial('COM11', 2400, parity=serial.PARITY_NONE, timeout = 0.25)
+#s = serial.Serial('COM12', 2400, parity=serial.PARITY_NONE, timeout = 0.25)
      # Sending over ethernet server
-#ip = '169.254.109.20' #change for new lantronix
-#port_num = 10001
-#s = socket.socket()
-#s.connect((ip, port_num))
+ip = '169.254.36.51' #change for new lantronix
+port_num = 10001
+s = socket.socket()
+s.connect((ip, port_num))
 #except:
 #    print("Failed to connect to power supply. \nPlease check connection and try again")
 #     quit()
@@ -74,8 +74,8 @@ def sendCommand(command, arg, slv_adr):
     #print("send comm= ", send_command)
     success = "Complete"
     try:
-        #s.send(send_command)
-        s.write(send_command)
+        s.send(send_command)
+        #s.write(send_command)
         #print("sent")
 
     except:
@@ -89,8 +89,8 @@ def sendCommand(command, arg, slv_adr):
 
 # Read reply from Excelsys
 def receiveReply(command):
-    reply = s.read(2)
-    #reply = s.recv(2)
+    #reply = s.read(2)
+    reply = s.recv(2)
     #print("in receive reply")
     num_bytes = 2
     #reply = s.read(num_bytes)#read 2 bytes
