@@ -347,23 +347,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : AC_Fail_Pin OTP_Pin */
-  GPIO_InitStruct.Pin = AC_Fail_Pin|OTP_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : FAN_Fail_Pin PG_Global_Pin */
-  GPIO_InitStruct.Pin = FAN_Fail_Pin|PG_Global_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PB1 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1;
+  /*Configure GPIO pins : PB1 PB6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_6;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PC7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PB4 */
   GPIO_InitStruct.Pin = GPIO_PIN_4;
@@ -394,9 +388,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		length = command[2];
 		i2c_command_ok = HAL_I2C_Mem_Write(&hi2c1, DEF_SLAVE_ADDR, command_addr , I2C_MEMADD_SIZE_8BIT, command_arg, length, 10);
 	}
-	else{ // command[1] == 1 read
+	else if(command[1] == 1){ //  read
 		read_ok = HAL_I2C_Mem_Read(&hi2c1, DEF_SLAVE_ADDR, command[3] , I2C_MEMADD_SIZE_8BIT, &reply, command[2], 10);
 		send_uart_ok = HAL_UART_Transmit(&huart1, &reply, command[2], 10);
+	}
+	else { // command[1] == 2 error
+		 HAL_UART_Transmit(&huart1, error, sizeof(error), 200);
 	}
 }
 
@@ -426,35 +423,29 @@ void HAL_SMBUS_MasterRxCpltCallback (SMBUS_HandleTypeDef * hsmbus1) {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	// want to assign reply the same way that status word does. assign bits for
-	// each error. -- how to assign bits in C?
+	// each error.
 	// B2 = OTP
 	// B4 = PG
 	// B1 = Fan Fail
 	// B3 = AC fail
-// how long do these gpio's stay on for? would we miss the error?
 	error = 0b00000000;
-    if(GPIO_Pin == PG_Global_Pin) // If The INT Source Is EXTI Line9 (A9 Pin)
+    if(GPIO_Pin == PG_Global_Pin)
     {
     	error = error | 0b00001000;
-    	//HAL_UART_Transmit(&huart2, "Error: PG", sizeof(reply), 200); // Toggle The Output (LED) Pin
     }
-    if(GPIO_Pin == FAN_Fail_Pin) // If The INT Source Is EXTI Line9 (A9 Pin)
+    if(GPIO_Pin == FAN_Fail_Pin)
         {
     	 error = error | 0b00000001;
-    		//HAL_UART_Transmit(&huart2, "Error: FAN", sizeof(reply), 200); // Toggle The Output (LED) Pin
         }
-    if(GPIO_Pin == AC_Fail_Pin) // If The INT Source Is EXTI Line9 (A9 Pin)
+    if(GPIO_Pin == AC_Fail_Pin)
         {
     	 error = error | 0b00000100;
-    		//HAL_UART_Transmit(&huart2, "Error: AC", sizeof(reply), 200); // Toggle The Output (LED) Pin
         }
-    if(GPIO_Pin == OTP_Pin) // If The INT Source Is EXTI Line9 (A9 Pin)
+    if(GPIO_Pin == OTP_Pin)
         {
     	 error = error | 0b00000010;
-    		//HAL_UART_Transmit(&huart2, "Error: OTP", sizeof(reply), 200); // Toggle The Output (LED) Pin
         }
     HAL_GPIO_TogglePin(LD2_GPIO_Port,LD2_Pin);
-    HAL_UART_Transmit(&huart1, error, sizeof(error), 200);
 }
 
 /* USER CODE END 4 */
